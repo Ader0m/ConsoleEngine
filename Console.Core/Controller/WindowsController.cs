@@ -1,5 +1,8 @@
 ﻿namespace ConsoleEngine.Core;
 
+/// <summary>
+/// Синглтон. Управляет межоконными действиями.
+/// </summary>
 public class WindowsController
 {
     #region Singltone
@@ -17,10 +20,25 @@ public class WindowsController
 
     #endregion
 
+    /// <summary>
+    /// Нужен для обращения к  “другим” окнам.
+    /// </summary>
     internal Dictionary<string, ConsoleWindow> Windows { get; private set; }
+    /// <summary>
+    /// Просит пользователя нажать Enter после выполнения опции меню.
+    /// </summary>
     internal bool IsNeedPause;
-    private bool IsBackButton;
+    /// <summary>
+    /// Так как "назад" тоже опция, этот флаг отменяет приостановку.
+    /// </summary>
+    private bool _isBackButton;
+    /// <summary>
+    /// Текущее окно/окно которое нужно открыть.
+    /// </summary>
     private ConsoleWindow _currentWindow;
+    /// <summary>
+    /// Хранит историю окон. Используется для возвращения назад.
+    /// </summary>
     private Stack<ConsoleWindow> _backWindows;
 
     private WindowsController()
@@ -29,6 +47,10 @@ public class WindowsController
         _backWindows = new();
     }
 
+    /// <summary>
+    /// Запуск приложения. Цикл контролирует паузу, и открытие нужного окна.
+    /// </summary>
+    /// <param name="startMenu"></param>
     public void StartUp(ConsoleWindow startMenu)
     {
         _currentWindow = startMenu;
@@ -37,14 +59,14 @@ public class WindowsController
         {
             if (_currentWindow != null)
             {
-                if (IsNeedPause && !IsBackButton)
+                if (IsNeedPause && !_isBackButton)
                 {
                     Console.WriteLine("Нажмите Enter, чтобы вернуться к предыдущему окну");
                     Console.ReadLine();
                     IsNeedPause = false;
-                    IsBackButton = false;
+                    _isBackButton = false;
                 }
-                IsBackButton = false;
+                _isBackButton = false;
                 _currentWindow.Show();
             }
             else
@@ -54,6 +76,30 @@ public class WindowsController
         }
     }
 
+
+    /// <summary>
+    /// Возвращает к предыдущему окну. Открыт для создания своих кнопок назад.
+    /// </summary>
+    public void OnClick_BackButton()
+    {
+        IsNeedPause = false;
+        _isBackButton = true;
+        Console.Clear();
+
+        try
+        {
+            _currentWindow = _backWindows.Pop();
+        }
+        catch (Exception ex)
+        {
+            Environment.Exit(0);
+        }
+    }
+
+    /// <summary>
+    /// Регестрирует открытие окна. Нужно для истории.
+    /// </summary>
+    /// <param name="window"></param>
     internal void StartWindowShow(ConsoleWindow window)
     {
         Console.Clear();
@@ -67,24 +113,13 @@ public class WindowsController
         _currentWindow = window;
     }
 
-    internal void RegWindow(ConsoleWindow window, string _rawTitle)
+    /// <summary>
+    /// Регестрирует окно в системе приложения. Нужно для межоконного доступа.
+    /// </summary>
+    /// <param name="window"></param>
+    /// <param name="rawTitle"></param>
+    internal void RegWindow(ConsoleWindow window, string rawTitle)
     {
-        Windows.Add(_rawTitle, window);
-    }
-
-    public void OnClick_BackButton()
-    {
-        IsNeedPause = false;
-        IsBackButton = true;
-        Console.Clear();
-        // _currentWindow.Clear(); Может надо такое или не надо
-        try
-        {
-            _currentWindow = _backWindows.Pop();
-        }
-        catch (Exception ex)
-        {
-            Environment.Exit(0);
-        }
+        Windows.Add(rawTitle, window);
     }
 }

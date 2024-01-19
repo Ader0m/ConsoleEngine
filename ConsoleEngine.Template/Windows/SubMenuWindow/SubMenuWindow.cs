@@ -1,13 +1,12 @@
 ﻿using ConsoleEngine.Core;
 
-namespace ConsoleEngine.Template
+namespace ConsoleEngine.Template;
+
+internal class SubMenuWindow : ConsoleWindow
 {
-    internal class SubMenuWindow : ConsoleWindow
+    public SubMenuWindow(string title) : base(title)
     {
-        public SubMenuWindow(string title) : base(title)
-        {
-            SelectController selectController = new SelectController(new());
-            _selectController = selectController;
-        }
+        //Установка контроллера обязательна
+        _selectController = new(new());
     }
 }
